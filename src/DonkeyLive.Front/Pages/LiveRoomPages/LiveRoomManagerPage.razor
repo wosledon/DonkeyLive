@@ -1,0 +1,130 @@
+﻿@page "/liveroom-manager"
+@using DonkeyLive.Front.Services
+@using DonkeyLive.Front.Services.Global
+@using DonkeyLive.Shared.Domain
+@using DonkeyLive.Shared.Extensions
+@using DonkeyLive.Shared.RequestInput
+
+
+<PageTitle>直播间管理</PageTitle>
+
+<DyDataTable Data="@LiveRooms" Headers="@Headers"
+             OnOptionsUpdate="HandleOnOptionsUpdateAsync"
+             Height="80"
+Width="120">
+<Title>
+    直播间管理
+    <MSpacer></MSpacer>
+        <MButton Color="ColorTypes.Primary" OnClick="()=>DialogVisible = true">
+        新建
+    </MButton>
+</Title>
+<CustomContent>
+    @if(context.Header.Value == nameof(LiveRoom.RoomId))
+        {
+            @($"{HttpRequestService.GetBaseAddress()?.TrimEnd('/')}/{context.Item.RoomId.TrimStart('/')}.flv")
+        }
+        else if(context.Header.Value == nameof(LiveRoom.Cover))
+        {
+            <MImage AspectRatio="16/9d" Src="@($"{HttpRequestService.GetBaseAddress()}/covers/{context.Item.RoomId}.jpg")">
+                <PlaceholderContent>
+                    <MRow Class="fill-height ma-0"
+                          Align="@AlignTypes.Center"
+                          Justify="@JustifyTypes.Center">
+                        <MIcon XLarge>
+                            mdi mdi-image
+                        </MIcon>
+                    </MRow>
+                </PlaceholderContent>
+            </MImage>
+        }
+        else
+        {
+            @context.Value
+        }
+    </CustomContent>
+    <Actions>
+        <MButton Color="ColorTypes.Primary" OnClick="()=> HandleOnEdit(context.Item)">
+            编辑
+        </MButton>
+        <MButton Color="ColorTypes.Secondary" OnClick="async ()=> await HandleOnDeleteAsync(context.Item)">
+            删除
+        </MButton>
+    </Actions>
+</DyDataTable>
+
+<LiveRoomEdit @bind-DialogVisible="DialogVisible"
+@bind-LiveRoom="EditItem"
+    OnSave="async (value) => await HandleOnSaveAsync(value)"
+              OnCancel="Close">
+
+</LiveRoomEdit>
+
+@code {
+    [Inject] LiveRoomService LiveRoomService { get; set; } = default!;
+    [Inject] HttpRequestService HttpRequestService { get; set; } = default!;
+
+    PagedList<LiveRoom> LiveRooms = new();
+    LiveRoomRequestInput RequestInput = new()
+    {
+        PageIndex = 1, PageSize = 10
+    };
+
+    async Task GetLiveRoomsAsync()
+    {
+        LiveRooms = await LiveRoomService.GetLiveRoomsAsync(RequestInput);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetLiveRoomsAsync();
+    }
+
+    List<DataTableHeader<LiveRoom>> Headers = new()
+    {
+        new(){Text = "直播间名称", Value = nameof(LiveRoom.Name), Fixed = DataTableFixed.Left, Width = "250px"},
+        new(){Text = "直播间描述", Value = nameof(LiveRoom.Description)},
+        new(){Text = "直播间状态", Value = nameof(LiveRoom.IsOnline)},
+        new(){Text = "直播间封面", Value = nameof(LiveRoom.Cover)},
+        new(){Text = "直播间地址", Value = nameof(LiveRoom.RoomId)},
+        new(){Text = "直播间创建时间", Value = nameof(LiveRoom.PlayAt) },
+        new(){Text = "操作", Value = "actions", Fixed = DataTableFixed.Right, Width="200px" },
+    };
+
+    async Task HandleOnOptionsUpdateAsync(DataOptions options)
+    {
+        RequestInput.PageIndex = options.Page;
+        RequestInput.PageSize = options.ItemsPerPage;
+
+        await GetLiveRoomsAsync();
+    }
+
+    bool DialogVisible { get; set; } = false;
+    LiveRoom EditItem = new();
+
+    async Task HandleOnSaveAsync(LiveRoom liveRoom)
+    {
+        await LiveRoomService.CreateLiveRoomAsync(liveRoom);
+        Close();
+    }
+
+    void HandleOnEdit(LiveRoom liveRoom)
+    {
+        EditItem = liveRoom;
+        DialogVisible = true;
+    }
+
+    async Task HandleOnDeleteAsync(LiveRoom liveRoom)
+    {
+        await LiveRoomService.DeleteLiveRoomAsync(liveRoom.Id);
+        await GetLiveRoomsAsync();
+    }
+
+    void Close()
+    {
+        DialogVisible = false;
+        EditItem = new LiveRoom();
+    }
+}

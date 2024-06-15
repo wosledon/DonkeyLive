@@ -1,0 +1,59 @@
+﻿@page "/"
+@using DonkeyLive.Front.Services
+@using DonkeyLive.Front.Services.Global
+@using DonkeyLive.Shared.Domain
+@using DonkeyLive.Shared.RequestInput
+
+<PageTitle>直播广场</PageTitle>
+
+@foreach(var item in LiveRooms)
+{
+    <MCard Width="300" Height="300">
+        <MImage AspectRatio="16/9d" Src="@($"{HttpRequestService.GetBaseAddress()}/covers/{item.RoomId}.jpg")">
+            <PlaceholderContent>
+                <MRow Class="fill-height ma-0"
+                      Align="@AlignTypes.Center"
+                      Justify="@JustifyTypes.Center">
+                    <MIcon XLarge>
+                        mdi mdi-image
+                    </MIcon>
+                </MRow>
+            </PlaceholderContent>
+        </MImage>
+        <MCardTitle>
+            @item.Name
+        </MCardTitle>
+        <MCardSubtitle>
+            @item.Description
+        </MCardSubtitle>
+        <MCardActions>
+            @* <MButton Color="ColorTypes.Primary" @onclick="()=>NavigationManager.NavigateTo($"/live-room/{item.RoomId}")">
+                进入直播间
+            </MButton> *@
+        </MCardActions>
+    </MCard>
+}
+
+@code {
+    [Inject] LiveRoomService LiveRoomService { get; set; } = default!;
+    [Inject] HttpRequestService HttpRequestService { get; set; } = default!;
+
+    PagedList<LiveRoom> LiveRooms { get; set; } = new();
+
+    LiveRoomRequestInput RequestInput = new()
+    {
+        PageIndex = 1, PageSize = 10
+    };
+
+    async Task GetLiveRoomsAsync()
+    {
+        LiveRooms = await LiveRoomService.GetLiveRoomsAsync(RequestInput);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetLiveRoomsAsync();
+    }
+}

@@ -1,0 +1,60 @@
+﻿@using DonkeyLive.Shared.Domain
+@using DonkeyLive.Shared.Extensions
+<MDialog @bind-Value="@DialogVisible" OnOutsideClick="CloseAsync"
+MaxWidth="500">
+    <MCard>
+        <MCardTitle>
+            @($"{(LiveRoom.Id == Guid.Empty ? "新建" : "编辑")}直播间")
+        </MCardTitle>
+        <MCardText>
+            <MTextField Label="直播间名称" @bind-Value="@LiveRoom.Name"
+                        Outlined Clearable HideDetails="true" />
+            <MTextField Label="直播间描述" @bind-Value="@LiveRoom.Description"
+                        Outlined Clearable HideDetails="true" />
+        </MCardText>
+        <MCardActions>
+            <MSpacer></MSpacer>
+            <MButton Color="info" OnClick="HandleOnSaveAsync">
+                保存
+            </MButton>
+            <MButton Color="warning" OnClick="HandleOnCancelAsync">
+                取消
+            </MButton>
+        </MCardActions>
+    </MCard>
+</MDialog>
+
+@code {
+    [Parameter]
+    public LiveRoom LiveRoom { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<LiveRoom> LiveRoomChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<LiveRoom> OnSave { get; set; }
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public bool DialogVisible { get; set; } = false;
+    [Parameter]
+    public EventCallback<bool> DialogVisibleChanged { get; set; }
+
+    async Task HandleOnSaveAsync()
+    {
+        Console.WriteLine($"Name: {LiveRoom.Name}");
+        await OnSave.InvokeAsync(LiveRoom);
+    }
+
+    async Task HandleOnCancelAsync()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    async Task CloseAsync()
+    {
+        DialogVisible = false;
+        await DialogVisibleChanged.InvokeAsync(DialogVisible);
+    }
+}

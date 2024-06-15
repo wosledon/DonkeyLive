@@ -1,0 +1,6 @@
+@DonkeyLive.WebApi_HostAddress = http://localhost:5055
+
+GET {{DonkeyLive.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

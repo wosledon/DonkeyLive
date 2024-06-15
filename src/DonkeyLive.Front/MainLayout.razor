@@ -1,0 +1,120 @@
+﻿@inherits LayoutComponentBase
+
+<MApp>
+    <MAppBar App ClippedLeft>
+        <MAppBarNavIcon XLarge>
+            <MIcon>
+                mdi mdi-atom
+            </MIcon>
+        </MAppBarNavIcon>
+
+        <MToolbarTitle>
+            Donkey Live
+        </MToolbarTitle>
+        <MSpacer></MSpacer>
+        <MButton Icon OnClick="ClickSwitchTheme">
+            @if (dark)
+            {
+                <MIcon>mdi mdi-weather-sunny</MIcon>
+            }
+            else
+            {
+                <MIcon>mdi mdi-weather-night</MIcon>
+            }
+        </MButton>
+        <MButton Text Color="primary" Target="_blank" Href="https://docs.masastack.com/blazor/introduction/why-masa-blazor">About</MButton>
+    </MAppBar>
+
+    <MNavigationDrawer App Permanent Clipped>
+        <MList Nav Routable>
+            @foreach (var nav in _navs)
+            {
+                if (nav.Children.Count > 0)
+                {
+                    <MListGroup @bind-Value="@nav.Active"
+                                PrependIcon="@nav.Icon"
+                                NoAction>
+                        <ActivatorContent>
+                            <MListItemContent>
+                                <MListItemTitle>@nav.Title</MListItemTitle>
+                            </MListItemContent>
+                        </ActivatorContent>
+
+                        <ChildContent>
+                            @foreach (var item in nav.Children)
+                            {
+                                <MListItem Href="@item.Route" ActiveClass="primary--text">
+                                    <MListItemContent>
+                                        <MListItemTitle>@item.Title</MListItemTitle>
+                                    </MListItemContent>
+                                </MListItem>
+                            }
+                        </ChildContent>
+                    </MListGroup>
+                }
+                else
+                {
+                    <MListItem Href="@nav.Route" ActiveClass="primary--text">
+                        <MListItemIcon>
+                            <MIcon>@nav.Icon</MIcon>
+                        </MListItemIcon>
+                        <MListItemContent>
+                            <MListItemTitle>@nav.Title</MListItemTitle>
+                        </MListItemContent>
+                    </MListItem>
+                }
+            }
+        </MList>
+    </MNavigationDrawer>
+
+    <MMain>
+        <MContainer Fluid>
+            <MErrorHandler>
+                @Body
+            </MErrorHandler>
+        </MContainer>
+    </MMain>
+</MApp>
+
+@code {
+    [Inject] IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] MasaBlazor MasaBlazor { get; set; } = default!;
+
+    class NavItem
+    {
+        public string Route { get; set; } = string.Empty;
+        public string Icon { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public bool Active { get; set; } = false;
+        public List<NavItem> Children { get; set; } = new();
+    }
+
+    List<NavItem> _navs = new()
+    {
+        new NavItem{Title = "直播广场", Icon = "mdi-youtube", Route = "/"},
+        new NavItem{Title = "直播间管理", Icon = "mdi-home", Route = "/liveroom-manager"},
+    };
+
+    #region Theme
+    DotNetObjectReference<MainLayout>? objRef;
+
+    bool dark = false;
+
+    protected override void OnInitialized()
+    {
+        objRef = DotNetObjectReference.Create(this);
+    }
+
+    private void ClickSwitchTheme(MouseEventArgs args)
+    {
+        _ = JSRuntime.InvokeVoidAsync("switchTheme", objRef, args.ClientX, args.ClientY);
+    }
+
+    [JSInvokable]
+    public void SwitchTheme()
+    {
+        dark = !dark;
+        MasaBlazor.ToggleTheme();
+    }
+    #endregion
+}

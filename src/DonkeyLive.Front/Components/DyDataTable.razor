@@ -1,0 +1,123 @@
+﻿
+@typeparam TItem where TItem: class, IEntityBase
+
+
+<MCard>
+    @if(@Title.IsNotNull())
+    {
+        <MCardTitle>
+            @Title
+        </MCardTitle>
+    }
+    @if(@Subtitle.IsNotNull())
+    {
+        <MCardSubtitle>
+            @Subtitle
+        </MCardSubtitle>
+    }
+    <MCardText>
+        <MDataTable 
+    Items="@Data" 
+    ItemKey="x=>x.Id.ToString()"
+    OnOptionsUpdate="HandleOnOptionsUpdateAsync"
+    ItemsPerPage="15"
+    ServerItemsLength="@Data.TotalCount"
+            Headers="@Headers" 
+            DisableSort
+        Loading="@Loading"
+        Width="@($"{Width}%")"
+        Height="@($"{Height}vh")"
+        >
+    <ItemColContent>
+        @if (context.Header.Value == "actions" && Actions.IsNotNull())
+        {
+            @Actions(context)
+        }
+        else if(context.Value?.GetType().IsEnum ?? false)
+        {
+            var enumValue = (Enum)context.Value;
+            var enumDescription = enumValue.GetType()
+            .GetField(enumValue.ToString())?
+            .GetCustomAttributes(typeof(DescriptionAttribute), false)
+            .FirstOrDefault() as DescriptionAttribute;
+
+            string description = enumDescription?.Description ?? enumValue.ToString();
+
+            <MChip Small Label Color="@ColorHelper.GetColor((int)context.Value)" Class="ma-2" TextColor="white">
+                @description
+            </MChip>
+        }
+        else if(context.Value?.GetType() == typeof(DateTime))
+        {
+            @(context.Value is DateTime dateTime ? dateTime.IsEmpty() ? "- -" : dateTime.ToString("yyyy-MM-dd HH:mm:ss") : "- -")
+        }
+        else if (context.Value?.GetType() == typeof(bool))
+        {
+            if (context.Value?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? false)
+            {
+                <MIcon Small Color="green">mdi mdi-check-circle-outline</MIcon>
+            }
+            else
+            {
+                <MIcon Small Color="error">mdi mdi-close-circle-outline</MIcon>
+            }
+        }
+        else if(CustomContent.IsNotNull())
+        {
+            @CustomContent(context)
+        }
+        else
+        {
+            @context.Value
+        }
+    </ItemColContent>
+</MDataTable>
+    </MCardText>
+</MCard>
+
+@code {
+    [Parameter]
+    public RenderFragment? Title{ get; set; }
+    [Parameter]
+    public RenderFragment? Subtitle{get; set;}
+
+    [Parameter]
+    public int Width { get; set; } = 100;
+    [Parameter]
+    public int Height { get; set; } = 75;
+
+    [Parameter]
+    public PagedList<TItem> Data { get; set; } = [];
+    [Parameter]
+    public EventCallback<int> DataChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<DataOptions> OnOptionsUpdate { get; set; }
+    [Parameter]
+    public List<DataTableHeader<TItem>> Headers { get; set; } = [];
+
+    [Parameter]
+    public RenderFragment<ItemColProps<TItem>>? Actions{ get; set; }
+
+    [Parameter]
+    public RenderFragment<ItemColProps<TItem>>? CustomContent{ get; set; }
+
+    async Task HandleOnOptionsUpdateAsync(DataOptions options)
+    {
+        await OnOptionsUpdate.InvokeAsync(options);
+    }
+
+    bool Loading { get; set; } = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Data.IsEmpty()) return;
+
+        if (DataChanged.HasDelegate)
+        {
+            Loading = true;
+            await DataChanged.InvokeAsync(Data.Count);
+            Loading = false;
+        }
+    }
+}
