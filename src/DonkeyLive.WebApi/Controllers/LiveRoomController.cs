@@ -111,6 +111,6 @@ public class LiveRoomController : ApiControllerBase
             return Error("Room not found");
         }
 
-        return Success($"{_appSettings.Value.RtmpBase}/{room.RoomId}");
+        return Success("",$"{_appSettings.Value.RtmpBase}/{room.RoomId}");
     }
 }

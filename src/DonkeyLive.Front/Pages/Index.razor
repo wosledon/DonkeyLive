@@ -8,7 +8,7 @@
 
 @foreach(var item in LiveRooms)
 {
-    <MCard Width="300" Height="300">
+    <MCard Width="300" Height="300" OnClick="()=> HandleOnPlay(item)">
         <MImage AspectRatio="16/9d" Src="@($"{HttpRequestService.GetBaseAddress()}/covers/{item.RoomId}.jpg")">
             <PlaceholderContent>
                 <MRow Class="fill-height ma-0"
@@ -34,6 +34,10 @@
     </MCard>
 }
 
+<DyLive @bind-DialogVisible="DialogVisible" @bind-LiveRoom="@Room" OnClose="HandleOnClose">
+
+</DyLive>
+
 @code {
     [Inject] LiveRoomService LiveRoomService { get; set; } = default!;
     [Inject] HttpRequestService HttpRequestService { get; set; } = default!;
@@ -55,5 +59,20 @@
     protected override async Task OnInitializedAsync()
     {
         await GetLiveRoomsAsync();
+    }
+
+    bool DialogVisible = false;
+    LiveRoom Room = new();
+
+    void HandleOnPlay(LiveRoom room)
+    {
+        Room = room;
+        DialogVisible = true;
+    }
+
+    void HandleOnClose()
+    {
+        DialogVisible = false;
+        Room = new();
     }
 }

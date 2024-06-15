@@ -1,0 +1,24 @@
+﻿<MDialog @bind-Value="DialogLiveVisible" OnOutsideClick="()=>DialogLiveVisible = false">
+    <MCard>
+
+    </MCard>
+    <MCardText>
+        <PCopyableText>
+            @LiveUrl
+        </PCopyableText>
+    </MCardText>
+</MDialog>
+
+
+@code{
+
+    [Parameter]
+    public bool DialogLiveVisible { get; set; } = false;
+    [Parameter]
+    public EventCallback<bool> DialogLiveVisibleChanged { get; set; }
+
+    [Parameter]
+    public string LiveUrl { get; set; } = string.Empty;
+    [Parameter]
+    public EventCallback<string> LiveUrlChanged { get; set; }
+}

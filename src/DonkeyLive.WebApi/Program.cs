@@ -69,6 +69,7 @@ builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("Applic
 
 var app = builder.Build();
 
+app.UseCors("AllowAll");
 app.UseGlobalExceptionMiddleware();
 app.UseRtmpServer();
 
@@ -95,7 +96,6 @@ else
 }
 
 
-app.UseCors("AllowAll");
 
 app.UseBlazorFrameworkFiles();
 app.UseDefaultFiles();

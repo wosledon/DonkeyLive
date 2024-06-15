@@ -1,0 +1,66 @@
+﻿@using DonkeyLive.Front.Services.Global
+@using DonkeyLive.Shared.Domain
+
+<MDialog @bind-Value="DialogVisible" OnOutsideClick="HandleClose" Fullscreen>
+    <MCard>
+        <MCardTitle>
+            @LiveRoom.Name
+            <MSpacer></MSpacer>
+            <MButton Icon OnClick="HandleClose">
+                <MIcon>mdi mdi-close</MIcon>
+            </MButton>
+        </MCardTitle>
+        <MCardText>
+            <MContainer>
+                <video id="@LiveRoom.RoomId" controls style="width: 100%; height: 100%; object-fit: contain;"></video>
+            </MContainer>
+        </MCardText>
+    </MCard>
+</MDialog>
+
+<style>
+    video::-webkit-media-controls-timeline {
+        display: none;
+    }
+</style>
+
+@code
+{
+    [Inject]
+    HttpRequestService HttpRequestService { get; set; } = default!;
+    [Inject]
+    IJSRuntime JSRuntime { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public LiveRoom LiveRoom { get; set; } = new();
+    [Parameter]
+    public EventCallback<LiveRoom> LiveRoomChanged { get; set; }
+
+    [Parameter]
+    public bool DialogVisible { get; set; } = false;
+    [Parameter]
+    public EventCallback<bool> DialogVisibleChanged { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (LiveRoom.Id == Guid.Empty || !LiveRoom.IsOnline) return;
+
+        var flv = $"{HttpRequestService.GetBaseAddress()?.TrimEnd('/')}/live/{LiveRoom.RoomId.TrimStart('/')}.flv";
+        await JSRuntime.InvokeVoidAsync("flvPlayer.init", flv, LiveRoom.RoomId);
+    }
+
+    private async Task HandleStop(Guid id)
+    {
+        await JSRuntime.InvokeVoidAsync("flvPlayer.stop", id.ToString());
+    }
+
+    async Task HandleClose()
+    {
+        DialogVisible = false;
+        await HandleStop(LiveRoom.Id);
+        await OnClose.InvokeAsync();
+    }
+}

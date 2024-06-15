@@ -16,3 +16,9 @@
         clip-path: circle(100% at var(--x) var(--y));
     }
 }
+
+
+//进度条
+video::-webkit-media-controls-timeline {
+    display: none;
+}

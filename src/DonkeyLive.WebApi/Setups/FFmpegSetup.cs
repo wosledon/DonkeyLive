@@ -10,7 +10,7 @@ public static class FFmpegSetup
         {
             GlobalFFOptions.Configure(opts =>
             {
-                opts.BinaryFolder = Path.Combine("D:/ffmpeg/bin", "ffmpeg.exe");
+                opts.BinaryFolder = Path.Combine("D:/ffmpeg/bin");
             });
         }
     }

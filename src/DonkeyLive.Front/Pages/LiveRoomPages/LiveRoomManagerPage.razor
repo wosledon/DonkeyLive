@@ -22,7 +22,7 @@ Width="120">
 <CustomContent>
     @if(context.Header.Value == nameof(LiveRoom.RoomId))
         {
-            @($"{HttpRequestService.GetBaseAddress()?.TrimEnd('/')}/{context.Item.RoomId.TrimStart('/')}.flv")
+            @($"{HttpRequestService.GetBaseAddress()?.TrimEnd('/')}/live/{context.Item.RoomId.TrimStart('/')}.flv")
         }
         else if(context.Header.Value == nameof(LiveRoom.Cover))
         {
@@ -44,10 +44,13 @@ Width="120">
         }
     </CustomContent>
     <Actions>
-        <MButton Color="ColorTypes.Primary" OnClick="()=> HandleOnEdit(context.Item)">
+        <MButton Color="info" OnClick="async ()=> await HandleOnGetLiveAsync(context.Item)">
+            获取串流码
+        </MButton>
+        <MButton Color="info" OnClick="()=> HandleOnEdit(context.Item)">
             编辑
         </MButton>
-        <MButton Color="ColorTypes.Secondary" OnClick="async ()=> await HandleOnDeleteAsync(context.Item)">
+        <MButton Color="info" OnClick="async ()=> await HandleOnDeleteAsync(context.Item)">
             删除
         </MButton>
     </Actions>
@@ -59,6 +62,10 @@ Width="120">
               OnCancel="Close">
 
 </LiveRoomEdit>
+
+<LiveRoomRtmp @bind-DialogLiveVisible="DialogLiveVisible" @bind-LiveUrl="@liveUrl">
+
+</LiveRoomRtmp>
 
 @code {
     [Inject] LiveRoomService LiveRoomService { get; set; } = default!;
@@ -127,4 +134,13 @@ Width="120">
         DialogVisible = false;
         EditItem = new LiveRoom();
     }
+
+    bool DialogLiveVisible = false;
+    string liveUrl = string.Empty;
+    async Task HandleOnGetLiveAsync(LiveRoom room)
+    {
+        DialogLiveVisible = true;
+        liveUrl = await LiveRoomService.GetLiveAsync(room.Id);
+    }
+
 }

@@ -57,7 +57,12 @@ public static class RtmpServerSetup
         app.UseAdminPanelUI(new AdminPanelUIOptions { BasePath = "/ui", HasHttpFlvPreview = true });
 
         Base = $"http://{app.Configuration.GetSection("Application:Host").Value}:{app.Configuration.GetSection("Application:Port").Value}";
+
+        var webEnv = app.Services.GetRequiredService<IWebHostEnvironment>();
+        WWWRoot = Path.Combine(webEnv.ContentRootPath, "wwwroot");
     }
+
+    public static string WWWRoot { get; private set; } = string.Empty;
 
     public static void Snap(string streamPath)
     {
@@ -66,15 +71,15 @@ public static class RtmpServerSetup
             await Task.Delay(5000); // 等待 5 秒
 
             var streamId = streamPath.TrimEnd('/').Split('/').Last();
-            var outputPath = Path.Combine(AppContext.BaseDirectory, "wwwroot", "covers", $"{streamId}.jpg");
+            var outputPath = Path.Combine(WWWRoot, "covers", $"{streamId}.jpg");
+
             try
             {
-
                 await FFMpegArguments
-                    .FromUrlInput(new Uri($"{Base.TrimEnd('/')}/{streamId}.flv"))
-                    .OutputToFile(outputPath, false, options => options
+                    .FromUrlInput(new Uri($"{Base.TrimEnd('/')}/live/{streamId}.flv"))
+                    .OutputToFile(outputPath, true, options => options
                         .Seek(TimeSpan.FromSeconds(5)) // 从流开始后的 5 秒处截取
-                        .WithVideoCodec("jpg") // 设置输出格式为 JPG
+                        .WithVideoCodec("mjpeg") // 设置输出格式为 JPG
                         .WithFrameOutputCount(1)) // 仅输出一个帧（即一张图片）
                     .ProcessAsynchronously();
             }

@@ -11,6 +11,9 @@
     <link href="css/DonkeyLive.Front.styles.css" rel="stylesheet" />
     <link href="manifest.webmanifest" rel="manifest" />
     <link href="css/materialdesign/v7.1.96/css/materialdesignicons.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.masastack.com/npm/xgplayer/3.0.11/xgplayer.min.css" />
+
 </head>
 
 <body>
@@ -35,6 +38,43 @@
 
         }
     </script>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/flv.js/1.6.2/flv.js"></script>
+    <<script>
+    window.flvPlayer = {
+        init: function (videoUrl, id) {
+            setTimeout(function () {
+                if (flvjs.isSupported()) {
+                    var videoElement = document.getElementById(id);
+                    console.log(videoElement)
+                    if (videoElement) {
+                        var flvPlayer = flvjs.createPlayer({
+                            type: 'flv',
+                            isLive: true,
+                            url: videoUrl
+                        });
+                        flvPlayer.attachMediaElement(videoElement);
+                        flvPlayer.load();
+                        flvPlayer.play();
+                        videoElement.flvPlayer = flvPlayer; // Store the flvPlayer instance in the videoElement
+                    }
+                }
+            }, 100); // Delay for 100 milliseconds
+        },
+        stop: function (videoId) {
+            var videoElement = document.getElementById(videoId);
+            if (videoElement) {
+                var flvPlayer = videoElement.flvPlayer;
+                if (flvPlayer) {
+                    flvPlayer.pause(); // Pause the video playback
+                    flvPlayer.unload(); // Unload the video source
+                    flvPlayer.detachMediaElement(); // Detach the video element from the player
+                    delete videoElement.flvPlayer; // Remove the flvPlayer instance from the videoElement
+                }
+            }
+        }
+    };
+</script>
 </body>
 
 </html>
